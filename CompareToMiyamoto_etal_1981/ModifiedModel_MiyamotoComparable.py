@@ -1,5 +1,3 @@
-# Simulations for the thermal evolution of the parent body of Itokawa
-
 # Jonas Hallstrom, Arizona State University, 2022
 
 # Citations:
@@ -100,9 +98,9 @@ def solve_heat_conduction_FPI(body_, tstep_, old_heat_, old_T_, old_c_p_, old_k_
         # Now that we have the LHS matrix and RHS vector for the CN scheme, scipy solves for the temperatures of the
         #  next timestep. These temperatures are then saved to the planetesimal object.
         body_.T = solve_banded((1, 1), banded_LHS, RHS)
-
-        body_.update_specific_heat()
         body_.update_heat_conductivity()
+        body_.update_specific_heat()
+
 
 
 class Planetesimal:
@@ -134,8 +132,9 @@ class Planetesimal:
         # Define initial values for instance variables from the parameters
         self.T = T_0 * np.ones(num_radial_nodes)
         self.time = t_form
-        self.update_specific_heat()  # Specific heat [J / ( kg * K )]
         self.update_heat_conductivity()  # Heat conductivity [W / ( m * K )]
+        self.update_specific_heat()  # Specific heat [J / ( kg * K )]
+
 
         # Create spacing of the radial points from a geometric series, according to thickness of the outer layer
         # and the number of shells. This creates more nodes near the surface than near the center.
@@ -156,10 +155,10 @@ class Planetesimal:
             self.radial_points = np.linspace(0, total_radius, num_radial_nodes)
 
     def update_heat_conductivity(self):
-        self.k =  self.c_p * self.rho * self.kappa_multiplier *( 1.29e-7 + (1.52e-4)/self.T )
+        self.k = 1.0 * np.ones_like(self.T)
 
     def update_specific_heat(self):
-        self.c_p = self.cp_multiplier * (800 + 0.25*self.T - (1.5e7)/(self.T**2))
+        self.c_p = self.k / (self.rho * 5.0e-7)
 
     def decay_heat(self, t):
         return np.sum(self.h_magnitude * np.exp(-t / self.h_tau))
@@ -169,22 +168,22 @@ if __name__ == '__main__':
 
     """ ----- CONTROL PANEL START ----- """
     # Planetesimal settings
-    T_0 = 200  # K
-    T_s = 200  # K
+    # Currently set to match the Figure1b L chondrite parent from Miyamoto et al. 1981
+    T_0 = 180  # K
+    T_s = 180  # K
     kappa_multiplier = 100  # percent (100 would be default)
     cp_multiplier = 100  # percent (100 would be default)
-    # Note that for this specific model, the value of density does not matter
-    ## as it cancels out of the equations of heat conduction
-    density = 3400  # [kg/m^3]
-    t_form_kyr = 2200  # kyr or ka
+    density = 3200  # [kg/m^3]
+    t_form_kyr = 1  # kyr or ka
     t_form_seconds = t_form_kyr * 1e3 * 365.25 * 24 * 60 * 60  # [sec]
-    tot_rad = 50_000  # meters
+    tot_rad = 85_000  # meters
     num_shells = 301  # Recommend: 100 for smaller bodies and up to 300 for larger bodies
     geo_spacing = False  # Option for spacing shell positions out by a geometric sequence
     first_thick = 20  # m, for geo spacing only
-    heat_multiplier = 100  # percent (100 would be default)
-    h_mag = np.array([2.034e-7]) * heat_multiplier / 100  # [W / kg], 26 Al
-    h_tau = np.array([1.0387e6]) * 365.25 * 24 * 60 * 60  # [sec], 26 Al
+    heat_multiplier = 110  # percent (100 would be default), ~110 is for L chondrite in Miyamoto like model
+    al_ratio = 5e-6  # 26al to 27al ratio at time of body formation
+    h_mag = np.array([3.645e-3 * al_ratio]) * heat_multiplier / 100  # [W / kg], from 26 Al, AT TIME OF BODY FORMATION per Miyamoto 1981 model
+    h_tau = np.array([1.03842e6]) * 365.25 * 24 * 60 * 60  # [sec], from 26 Al
 
     # Simulation settings
     t_end_myr = 10  # This is the end of the simulation only IF the central temperature is less than 1.05 times the surface.
@@ -222,9 +221,9 @@ if __name__ == '__main__':
         raise ValueError("Radius must be greater than 3000 for the shell recording to work")
 
     current_datetime = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
-    file_name = 'ItokawaResults_'+current_datetime+'-km{}-cpm{}-Ts{}-form{}-rad{}.txt'.format(kappa_multiplier, cp_multiplier, T_s,
+    file_name = 'MiyamotoLikeResults_'+current_datetime+'-km{}-cpm{}-Ts{}-form{}-rad{}.txt'.format(kappa_multiplier, cp_multiplier, T_s,
                     t_form_seconds/(1e6 * 365.25 * 24 * 60 * 60), tot_rad/1000)  # Name of .txt file that will be saved
-    figure_name = 'ItokawaResults_'+current_datetime+'.png'  # name of .png file that will be saved
+    figure_name = 'MiyamotoLikeResults_'+current_datetime+'.png'  # name of .png file that will be saved
 
 
     # Create an instance/object from the Planetesimal class
