@@ -1,8 +1,8 @@
 # Jonas Hallstrom, 2022
 # Notes:
 # - %_Ito and Vol_Ito are based on roughly how much of the body matter had maximum temperatures between 1073 and 1273 K
-## But they are not fully representative of the requirements to match the parent body material, just a quick guide/approximation
-# - The tempK_enter_exit columns give the two times at which the body's core entered and exited that temperature, in seconds, where -1 means never entered or exited.
+# --- But they are not fully representative of the requirements to match the parent body material, just a quick guide/approximation
+# - The tempK_enter_exit columns give the two times at which the body's center entered and exited that temperature, in seconds, where -1 means never entered or exited.
 # - Note that kappa and cp multi are actual multipliers, e.g. multiplying by 1.1, whereas the corresponding number to be entered into the simulation code would be the percentage, e.g. 110
 
 t_form(ma), rad(km), kappa_multi, cp_multi, core_temp,    %_Ito,       Vol_Ito,     873.15K_enter_exit,     973.15K_enter_exit,    1073.15K_enter_exit,    1173.15K_enter_exit,    1273.15K_enter_exit,    1373.15K_enter_exit, 2.448e+14_sec_core_temp, 2.440e+14_sec_core_temp, 2.433e+14_sec_core_temp, 2.415e+14_sec_core_temp, 2.398e+14_sec_core_temp, 2.382e+14_sec_core_temp, 2.367e+14_sec_core_temp, 2.350e+14_sec_core_temp, 2.265e+14_sec_core_temp, 2.171e+14_sec_core_temp, 2.098e+14_sec_core_temp, 2.038e+14_sec_core_temp, 2.021e+14_sec_core_temp
