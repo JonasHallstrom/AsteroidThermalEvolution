@@ -53,8 +53,8 @@ with open(FD_L_file) as f:
 FD_H_data = np.genfromtxt(FD_H_file, skip_header=11)
 FD_L_data = np.genfromtxt(FD_L_file, skip_header=11)
 
-FD_H_times = (FD_H_data[:, 0] - FD_H_data[0,0]) / y_to_sec  # in years from formation now
-FD_L_times = (FD_L_data[:, 0] - FD_L_data[0,0]) / y_to_sec
+FD_H_times = (FD_H_data[:, 0]) / y_to_sec  # in years from formation now
+FD_L_times = (FD_L_data[:, 0]) / y_to_sec
 
 print("H Chondrite")
 print("Dist. from center, peak temperature")
