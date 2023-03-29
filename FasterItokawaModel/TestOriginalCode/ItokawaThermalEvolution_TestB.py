@@ -6,7 +6,6 @@
 # Henke S. et al. 2012. A&A 537:A45
 # Henke S. public FORTRAN thermal model at https://www.ita.uni-heidelberg.de/~gail/AsteroidEvol.html
 # Wakita S. et al. 2014. Meteoritics & Planetary Science 49(2):228–236
-# Hallstrom J. and Bose M. 2023. Earth, Planets, and Space. Open access at doi.org/10.1186/s40623-022-01751-x
 
 # Imported packages
 import numpy as np  # General math
@@ -176,10 +175,10 @@ if __name__ == '__main__':
     # Note that for this specific model, the value of density does not matter
     ## as it cancels out of the equations of heat conduction
     density = 3400  # [kg/m^3]
-    t_form_kyr = 2200  # kyr or ka
+    t_form_kyr = 1800  # kyr or ka
     t_form_seconds = t_form_kyr * 1e3 * 365.25 * 24 * 60 * 60  # [sec]
-    tot_rad = 50_000  # meters
-    num_shells = 301  # Recommend: 100 for smaller bodies and up to 300 for larger bodies
+    tot_rad = 5_000  # meters
+    num_shells = 101  # Recommend: 100 for smaller bodies and up to 300 for larger bodies
     geo_spacing = False  # Option for spacing shell positions out by a geometric sequence
     first_thick = 20  # m, for geo spacing only
     heat_multiplier = 100  # percent (100 would be default)
@@ -222,9 +221,8 @@ if __name__ == '__main__':
         raise ValueError("Radius must be greater than 3000 for the shell recording to work")
 
     current_datetime = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
-    file_name = 'ItokawaResults_'+current_datetime+'-km{}-cpm{}-Ts{}-form{}-rad{}.txt'.format(kappa_multiplier, cp_multiplier, T_s,
-                    t_form_seconds/(1e6 * 365.25 * 24 * 60 * 60), tot_rad/1000)  # Name of .txt file that will be saved
-    figure_name = 'ItokawaResults_'+current_datetime+'.png'  # name of .png file that will be saved
+    file_name = 'ItokawaResults_TestB.txt'  # Name of .txt file that will be saved
+    figure_name = 'ItokawaResults_TestB.png'  # name of .png file that will be saved
 
 
     # Create an instance/object from the Planetesimal class

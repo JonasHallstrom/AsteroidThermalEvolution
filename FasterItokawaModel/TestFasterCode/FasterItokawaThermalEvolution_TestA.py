@@ -1,12 +1,14 @@
 # Simulations for the thermal evolution of the parent body of Itokawa
 
-# Jonas Hallstrom, Arizona State University, 2022
+# Jonas Hallstrom, Arizona State University, 2023
 
 # Citations:
 # Henke S. et al. 2012. A&A 537:A45
 # Henke S. public FORTRAN thermal model at https://www.ita.uni-heidelberg.de/~gail/AsteroidEvol.html
 # Wakita S. et al. 2014. Meteoritics & Planetary Science 49(2):228–236
-# Hallstrom J. and Bose M. 2023. Earth, Planets, and Space. Open access at doi.org/10.1186/s40623-022-01751-x
+
+
+""" ---------- IMPORTS AND DEFINITIONS ---------- """
 
 # Imported packages
 import numpy as np  # General math
@@ -106,9 +108,6 @@ def solve_heat_conduction_FPI(body_, tstep_, old_heat_, old_T_, old_c_p_, old_k_
 
 
 class Planetesimal:
-    G = 6.67408e-11  # m^3 / (kg s^2)
-    pi = np.pi
-
     def __init__(self, T_0, T_surf, rho, t_form, total_radius, num_radial_nodes, first_thickness, h_magnitude, h_tau, cp_multiplier, kappa_multiplier):
         ''' Initial or constant values for the body
         :param T_0: Initial temperature of entire body [K]
@@ -164,38 +163,51 @@ class Planetesimal:
     def decay_heat(self, t):
         return np.sum(self.h_magnitude * np.exp(-t / self.h_tau))
 
+
+# Global variables:
+year_to_sec = 365.25 * 24 * 60 * 60
+
+
 # Begin main code
 if __name__ == '__main__':
 
-    """ ----- CONTROL PANEL START ----- """
-    # Planetesimal settings
-    T_0 = 200  # K
-    T_s = 200  # K
-    kappa_multiplier = 100  # percent (100 would be default)
+    """ ---------- CONTROL PANEL ---------- """
+
+    # Important model settings that are often changed
+
+    t_form_kyr = 5000  # kyr or ka
+    tot_rad = 5_000  # meters
+
+    T_s = 150 # K, should be greater than ~135 K to avoid cp becoming negative! Also T_0
+
+    kappa_multiplier = 0  # percent (100 would be default)
     cp_multiplier = 100  # percent (100 would be default)
-    # Note that for this specific model, the value of density does not matter
-    ## as it cancels out of the equations of heat conduction
-    density = 3400  # [kg/m^3]
-    t_form_kyr = 2200  # kyr or ka
-    t_form_seconds = t_form_kyr * 1e3 * 365.25 * 24 * 60 * 60  # [sec]
-    tot_rad = 50_000  # meters
-    num_shells = 301  # Recommend: 100 for smaller bodies and up to 300 for larger bodies
-    geo_spacing = False  # Option for spacing shell positions out by a geometric sequence
-    first_thick = 20  # m, for geo spacing only
     heat_multiplier = 100  # percent (100 would be default)
+
+    # Settings that can be changed, but usually the defaults are fine
+
     h_mag = np.array([2.034e-7]) * heat_multiplier / 100  # [W / kg], 26 Al
-    h_tau = np.array([1.0387e6]) * 365.25 * 24 * 60 * 60  # [sec], 26 Al
+    h_tau = np.array([1.0387e6]) * year_to_sec  # [sec], 26 Al
 
-    # Simulation settings
-    t_end_myr = 10  # This is the end of the simulation only IF the central temperature is less than 1.05 times the surface.
-    end_of_simulation_time = t_end_myr * 1e6 * 365.25 * 24 * 60 * 60  # [sec]
-    timestep = 1e1 * 365.25 * 24 * 60 * 60  # Initial timestep [sec]
-    max_timestep = 1e3 * 365.25 * 24 * 60 * 60  # Maximum timestep [sec]
+    num_shells = 101  # Recommend: 101 for smaller bodies (~5 km) and up to 301 for larger bodies (~50-100 km)
+    geo_spacing = False  # Option for spacing shell positions out by a geometric sequence, not usually needed
+    first_thick = 20  # m, for geo spacing only
 
-    # Data recording settings
+    timestep = 1e1 * year_to_sec  # Initial timestep [sec]
+    max_timestep = 1e3 * year_to_sec  # Maximum timestep [sec]
+    t_end_myr = 10  # Ma or Myr, one of two conditions for the simulation ending
+    end_of_simulation_temp = T_s*2  # K, second of two conditions for simulation end
+
     num_recorded_timesteps = 100  # Roughly the number of recorded timesteps, could be less based on max_timestep
+    simulation_nickname = "_TestA"  # string to append to names of results files, leave as empty string if none wanted
 
-    """ ----- CONTROL PANEL END ----- """
+    """ ---------- PRE-SIMULATION PREPARATION AND CLEAN-UP ---------- """
+
+    # Related to settings, but do not need to be touched
+    T_0 = T_s  # K, currently must be true or else it bugs out the tiemstep lowerer
+    end_of_simulation_time = t_end_myr * 1e6 * year_to_sec  # [sec]
+    density = 3400  # [kg/m^3], does not matter for this model because it cancels out of the conduction equation
+    t_form_seconds = t_form_kyr * 1e3 * year_to_sec  # [sec]
 
     # Additional data recording information
     if tot_rad % 1000 == 0 and tot_rad >= 3000:
@@ -219,12 +231,12 @@ if __name__ == '__main__':
         while shells_to_record[-1] > 0:
             shells_to_record.append(shells_to_record[-1] - 5000)
     else:
-        raise ValueError("Radius must be greater than 3000 for the shell recording to work")
+        raise ValueError("Radius must be greater than 3000 for the automatic shell recording to work")
 
     current_datetime = datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
-    file_name = 'ItokawaResults_'+current_datetime+'-km{}-cpm{}-Ts{}-form{}-rad{}.txt'.format(kappa_multiplier, cp_multiplier, T_s,
-                    t_form_seconds/(1e6 * 365.25 * 24 * 60 * 60), tot_rad/1000)  # Name of .txt file that will be saved
-    figure_name = 'ItokawaResults_'+current_datetime+'.png'  # name of .png file that will be saved
+    file_name = ('ItokawaResultsCleaner_'+current_datetime+'-km{}-cpm{}-Ts{}-form{}-rad{}'+simulation_nickname+'.txt').format(
+    kappa_multiplier, cp_multiplier, T_s, t_form_seconds/(1e6 * year_to_sec), tot_rad/1000)  # Name of .txt file that will be saved
+    figure_name = 'ItokawaResultsCleaner_'+current_datetime+simulation_nickname+'.png'  # name of .png file that will be saved
 
 
     # Create an instance/object from the Planetesimal class
@@ -241,8 +253,10 @@ if __name__ == '__main__':
     last_readout = 0
     max_temp = np.zeros(num_shells)
 
-    # Main loop that evolves the temperature of the planetesimal class instance over time
-    while parent.time < end_of_simulation_time or parent.T[0] > T_s*2:
+
+    """ ---------- BEGIN MAIN LOOP EVOLVING THE PLANETESIMAL ----------"""
+
+    while parent.time < end_of_simulation_time or parent.T[0] > end_of_simulation_temp:
         # Save the current properties of the class instance as 'old' so that we can revert the instance back to these
         #  in case the conduction for a time step is too big or doesn't converge, and we need to redo the timestep.
         old_heat = parent.decay_heat(parent.time)
@@ -287,8 +301,10 @@ if __name__ == '__main__':
             else:
                 timestep = max_timestep
 
-        # Most of the data produced and used in the simulation is overwritten and not saved, only sometimes recorded
-        # here according to the num_recorded_timesteps
+
+        """ ---------- IN-LOOP DATA COLLECTION ---------- """
+        # Most of the data produced and used in the simulation is overwritten and not saved
+        # Dat is only sometimes recorded here according to the num_recorded_timesteps
         if parent.time - last_record > record_time:
             last_record = parent.time
             recorded_T.append(parent.T[shell_indices])
@@ -297,18 +313,17 @@ if __name__ == '__main__':
             if time_module.process_time()-last_readout > 1:
                 last_readout = time_module.process_time()
                 print("\nProcess time is at {:.2f} seconds".format(time_module.process_time()))
-                print("Time Elapsed: {:.2f} Ma".format((parent.time - t_form_seconds) / (1e6*365.25*24*60*60)))
-                print("Time After CAI: {:.2f} Ma".format(parent.time / (1e6*365.25*24*60*60)))
-                print("Current Timestep: {:.2f} a".format(timestep / (365.25*24*60*60)))
+                print("Time Elapsed: {:.2f} Ma".format((parent.time - t_form_seconds) / (1e6*year_to_sec)))
+                print("Time After CAI: {:.2f} Ma".format(parent.time / (1e6*year_to_sec)))
+                print("Current Timestep: {:.2f} a".format(timestep / (year_to_sec)))
                 print("Center T: {:.1f} K or {:.1f} C".format(parent.T[0], parent.T[0] - 273.15))
-
-
 
         # Updates the maximum temperatures in each shell
         max_temp = np.maximum(max_temp, parent.T)
 
 
-    # ---------- PLOTTING AND STORING RESULTS ----------
+    """ ---------- POST-SIMULATION PLOTTING AND STORING RESULTS ---------- """
+
     print("\nFinished simulation")
     print("Array of Maximum Temperatures Throughout Body (center to surface): \n", np.round(max_temp, 1))
 
@@ -323,7 +338,7 @@ if __name__ == '__main__':
 
     # Plotting results
     for i in range(len(shells_to_record)):
-        plt.semilogx([t / (365.25 * 24 * 60 * 60) for t in recorded_time], [snapshot[i] for snapshot in recorded_T])
+        plt.semilogx([t / (year_to_sec) for t in recorded_time], [snapshot[i] for snapshot in recorded_T])
     plt.ylabel("Temperature (K)")
     plt.xlabel("Time (annum)")
     plt.legend(["{:.2f} km".format(r / 1000) for r in parent.radial_points[shell_indices]])
@@ -343,7 +358,7 @@ if __name__ == '__main__':
         f.write('\n')
         f.write('\nRadial Points of Max Temps')
         f.write('\n')
-        f.write('  '.join(['{:.3e}'.format(x) for x in parent.radial_points]))
+        f.write(' '.join(['{:.3e}'.format(x) for x in parent.radial_points]))
         f.write('\n')
         f.write('\nVolume and Percent Volume in Temp Range {} to {}: vol:{}. %vol:{} '.format(
             temp_zone_bounds[0], temp_zone_bounds[1], temp_zone_volume, temp_zone_percent))

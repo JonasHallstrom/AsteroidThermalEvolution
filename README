@@ -1,3 +1,5 @@
-This is work done by Jonas Hallstrom from 2021 to 2022 on the thermal modeling of chondrite parent bodies, specifically for asteorid Itokawa's parent body
-The primary model and data is in the FiniteDifferenceModel directory
+This is work done by Jonas Hallstrom from 2021 through 2023 on the thermal modeling of chondrite parent bodies, specifically for asteorid Itokawa's parent body. These models and its data were used in a publication about Itokawa's parent body, Hallstrom and Bose 2023, Earth, Planets, and Space, doi.org/10.1186/s40623-022-01751-x.
+The  model and data used in the publication is in the FiniteDifferenceModel directory.
 The CompareToMiyamoto_etal_1981 directory is a modified version of the model compared with another know analytically solved model.
+A faster but otherwise identical verison of the model is available in the FasterItokawaModel directory. Five test simulations have been created and ran which compare the results of the faster model with the earlier model, which are included in the directory.
+
